@@ -1,5 +1,9 @@
 -- this file is used by pragtical to setup the Lua environment when starting
 VERSION = "@PROJECT_VERSION@"
+BUILD_BIN_DIR = '@PROJECT_BIN_DIR@'
+BUILD_DATA_DIR = '@PROJECT_DATA_DIR@'
+BUILD_LIB_DIR = '@PROJECT_LIB_DIR@'
+BUILD_INCLUDE_DIR = '@PROJECT_INCLUDE_DIR@'
 MOD_VERSION_MAJOR = 3
 MOD_VERSION_MINOR = 5
 MOD_VERSION_PATCH = 0
@@ -14,7 +18,7 @@ if MACOS_RESOURCES then
   DATADIR = MACOS_RESOURCES
 else
   local prefix = os.getenv('PRAGTICAL_PREFIX') or EXEDIR:match("^(.+)[/\\]bin$")
-  DATADIR = prefix and (prefix .. PATHSEP .. 'share' .. PATHSEP .. 'pragtical') or (EXEDIR .. PATHSEP .. 'data')
+  DATADIR = prefix and (prefix .. PATHSEP .. BUILD_DATA_DIR .. PATHSEP .. 'pragtical') or (EXEDIR .. PATHSEP .. 'data')
 end
 USERDIR = (system.get_file_info(EXEDIR .. PATHSEP .. 'user') and (EXEDIR .. PATHSEP .. 'user'))
        or os.getenv("PRAGTICAL_USERDIR")

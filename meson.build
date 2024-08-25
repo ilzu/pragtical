@@ -64,6 +64,10 @@ conf_data.set('PROJECT_BUILD_DIR', meson.current_build_dir())
 conf_data.set('PROJECT_SOURCE_DIR', meson.current_source_dir())
 conf_data.set('PROJECT_VERSION', version)
 conf_data.set('PROJECT_ASSEMBLY_VERSION', meson.project_version() + '.0')
+conf_data.set('PROJECT_BIN_DIR', get_option('bindir'))
+conf_data.set('PROJECT_LIB_DIR', get_option('libdir'))
+conf_data.set('PROJECT_DATA_DIR', get_option('datadir'))
+conf_data.set('PROJECT_INCLUDE_DIR', get_option('includedir'))
 
 #===============================================================================
 # Compiler Settings
@@ -77,7 +81,7 @@ cc = meson.get_compiler('c')
 pragtical_includes = []
 pragtical_cargs = ['-DSDL_MAIN_HANDLED', '-DPCRE2_STATIC']
 # On macos we need to use the SDL renderer to support retina displays
-if get_option('renderer')
+if get_option('renderer') or host_machine.system() == 'darwin'
     pragtical_cargs += '-DPRAGTICAL_USE_SDL_RENDERER'
 endif
 if get_option('arch_tuple') != ''
@@ -254,9 +258,13 @@ elif get_option('bundle') and host_machine.system() == 'darwin'
         install_dir : 'Contents'
     )
 else
-    pragtical_bindir = 'bin'
-    pragtical_docdir = 'share/doc/pragtical'
-    pragtical_datadir = 'share/pragtical'
+    pragtical_bindir = get_option('bindir')
+    pragtical_docdir = get_option('datadir') / 'doc/pragtical'
+    pragtical_datadir = get_option('datadir') / 'pragtical'
+    pragtical_cargs += '-DBUILD_DATA_DIR="' + get_option('datadir') + '"'
+    pragtical_cargs += '-DBUILD_BIN_DIR="' + get_option('bindir') + '"'
+    pragtical_cargs += '-DBUILD_LIB_DIR="' + get_option('libdir') + '"'
+    pragtical_cargs += '-DBUILD_INCLUDE_DIR="' + get_option('includedir') + '"'
     if host_machine.system() == 'linux'
         install_data('resources/icons/logo.svg',
             install_dir : 'share/icons/hicolor/scalable/apps',

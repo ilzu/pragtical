@@ -15,7 +15,20 @@
   #include <mach-o/dyld.h>
 #elif defined(__FreeBSD__)
   #include <sys/sysctl.h>
+#elif defined(__HAIKU__)
+  #include <kernel/image.h>
 #endif
+
+#ifndef BUILD_BIN_DIR
+#define BUILD_BIN_DIR "bin"
+#endif
+#ifndef BUILD_DATA_DIR
+#define BUILD_DATA_DIR "share"
+#endif
+#ifndef BUILD_LIB_DIR
+#define BUILD_LIB_DIR "lib"
+#endif
+
 
 static void get_exe_filename(char *buf, int sz) {
 #if _WIN32
@@ -48,6 +61,16 @@ static void get_exe_filename(char *buf, int sz) {
   size_t len = sz;
   const int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
   sysctl(mib, 4, buf, &len, NULL, 0);
+#elif __HAIKU__
+  image_info info;
+  int cookie = 0;
+  while(get_next_image_info(0, &cookie, &info) == B_OK){
+    if(info.type == B_APP_IMAGE){
+      break;
+    }
+  }
+  strncpy(buf, info.name, sz);
+  buf[strlen(info.name)] = '\0';
 #else
   *buf = 0;
 #endif
@@ -92,6 +115,8 @@ void set_macos_bundle_resources(lua_State *L);
     #define ARCH_PLATFORM "darwin"
   #elif __serenity__
     #define ARCH_PLATFORM "serenity"
+  #elif __HAIKU__
+    #define ARCH_PLATFORM "haiku"
   #else
   #endif
 
@@ -223,8 +248,8 @@ init_lua:
     "  HOME = os.getenv('" PRAGTICAL_OS_HOME "')\n"
     "  LUAJIT = " PRAGTICAL_LUAJIT "\n"
     "  local exedir = match(EXEFILE, '^(.*)" PRAGTICAL_PATHSEP_PATTERN PRAGTICAL_NONPATHSEP_PATTERN "$')\n"
-    "  local prefix = os.getenv('PRAGTICAL_PREFIX') or match(exedir, '^(.*)" PRAGTICAL_PATHSEP_PATTERN "bin$')\n"
-    "  dofile((MACOS_RESOURCES or (prefix and prefix .. '/share/pragtical' or exedir .. '/data')) .. '/core/start.lua')\n"
+    "  local prefix = os.getenv('PRAGTICAL_PREFIX') or match(exedir, '^(.*)" PRAGTICAL_PATHSEP_PATTERN " "BUILD_BIN_DIR "$')\n"
+    "  dofile((MACOS_RESOURCES or (prefix and prefix .. '/" BUILD_DATA_DIR "/pragtical' or exedir .. '/data')) .. '/core/start.lua')\n"
     "  core = require(os.getenv('PRAGTICAL_RUNTIME') or 'core')\n"
     "  core.init()\n"
     "  core.run()\n"
